@@ -68,6 +68,11 @@ class OtakuPlayerObserver(xbmc.Player):
         episode = xbmc.getInfoLabel('VideoPlayer.Episode')
         title = xbmc.getInfoLabel('VideoPlayer.TVShowTitle') or xbmc.getInfoLabel('VideoPlayer.Title')
         plugin_url = xbmc.getInfoLabel('Player.Filenameandpath') 
+        xbmc.log(f"[OtakuMonitor Diag [START]] Raw Filenameandpath: {plugin_url}", xbmc.LOGWARNING)
+        xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel Season: {xbmc.getInfoLabel('VideoPlayer.Season')}", xbmc.LOGWARNING)
+        xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel Episode: {xbmc.getInfoLabel('VideoPlayer.Episode')}", xbmc.LOGWARNING)
+        xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel TVShowTitle: {xbmc.getInfoLabel('VideoPlayer.TVShowTitle')}", xbmc.LOGWARNING)
+        xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel Title: {xbmc.getInfoLabel('VideoPlayer.Title')}", xbmc.LOGWARNING)
         if 'plugin.video.otaku' in plugin_url or xbmc.getInfoLabel('Container.PluginName') == 'plugin.video.otaku':
             self.is_playing_otaku = True
             if '?' in plugin_url:
@@ -138,28 +143,45 @@ if __name__ == "__main__":
                                 if target_ep == tvdb_ep:
                                     ep_data = info
                                     break
+                        
                         if ep_data:
                             tmdb_season = ep_data.get("seasonNumber")
                             tmdb_episode = ep_data.get("episodeNumber")
+
                             if tmdb_season is not None and tmdb_episode is not None:
                                 tmdb_GEM = f"S{tmdb_season:02d}E{tmdb_episode:02d}"
                                 xbmc.log(f"[OtakuMonitor] SUCCESS! Final Scraper Target: {tmdb_GEM}", xbmc.LOGINFO)
                                 try:
-                                 listitem = xbmcgui.ListItem()
-                                 video_tag = listitem.getVideoInfoTag()
-                                 video_tag.setSeason(int(tmdb_season))
-                                 video_tag.setEpisode(int(tmdb_episode))
-                                 video_tag.setMediaType('episode')
-    
-                                 xbmc.Player().updateInfoTag(listitem)
-                                 xbmc.log("[OtakuMonitor] Successfully updated player metadata with TMDB layout via InfoTagVideo.", xbmc.LOGINFO) 
+                                    listitem = xbmcgui.ListItem()
+                                    video_tag = listitem.getVideoInfoTag()
+                                    video_tag.setSeason(int(tmdb_season))
+                                    video_tag.setEpisode(int(tmdb_episode))
+                                    video_tag.setMediaType('episode')
+                                    video_tag.setUniqueIDs({'tmdb': str(tmdb_season), 'episode': str(tmdb_episode)})
+                                    xbmc.Player().updateInfoTag(listitem)
+                                    active_tag = xbmc.Player().getVideoInfoTag()
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag Season: {active_tag.getSeason()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag Episode: {active_tag.getEpisode()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag TVShowTitle: {active_tag.getTVShowTitle()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag Title: {active_tag.getTitle()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag UniqueIDs: {active_tag.getUniqueIDs()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] Global InfoLabel Season: {xbmc.getInfoLabel('VideoPlayer.Season')}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] Global InfoLabel Episode: {xbmc.getInfoLabel('VideoPlayer.Episode')}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [POST]] Player Filenameandpath: {xbmc.getInfoLabel('Player.Filenameandpath')}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[Diagnostic] Current string label VideoPlayer.Episode is: {xbmc.getInfoLabel('VideoPlayer.Episode')}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[Diagnostic] Current InfoTagVideo episode is: {xbmc.Player().getVideoInfoTag().getEpisode()}", xbmc.LOGWARNING)
+                                    xbmc.log("[OtakuMonitor] Successfully updated player metadata with TMDB layout via InfoTagVideo.", xbmc.LOGINFO) 
                                 except Exception as e:
-                                 xbmc.log(f"[OtakuMonitor] Failed to update player metadata: {e}", xbmc.LOGERROR)
+                                    xbmc.log(f"[OtakuMonitor] Failed to update player metadata: {e}", xbmc.LOGERROR)
                             else:
-                             xbmc.log(f"[OtakuMonitor] AniZip data found for episode {current_ep}, but TVDB mapping is missing.", xbmc.LOGWARNING)
-                                
-                    last_seen_identifier = identifier
+                                xbmc.log(f"[OtakuMonitor] AniZip data found for episode {current_ep}, but TVDB mapping is missing.", xbmc.LOGWARNING)
+                        
+                        last_seen_identifier = identifier
+                else:
+                    last_seen_identifier = None
         else:
             last_seen_identifier = None
+
         if monitor.waitForAbort(5):
             break
+
