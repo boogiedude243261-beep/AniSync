@@ -17,3 +17,10 @@
 When streaming anime through third-party Kodi add-ons like **Otaku**, media streams often rely on absolute episode numbering or messy internal layout parameters. This breaks standard television indexing, leaving subtitle add-ons (such as OpenSubtitles or a4kSubtitles) unable to automatically match files.
 
 **AniSync** runs silently as a lightweight background service daemon in Kodi. The moment an anime stream starts, AniSync intercepts the playback event, queries the **AniList GraphQL API** and **AniZip mappings**, translates split-cour offsets and structural mismatches, and injects clean TMDB metadata tags directly into Kodi's active player. 
+
+---
+<div align="center">
+  
+## Installation 
+ Toggle "Unknown Sources" in Kodi's system settings. Then, from your Kodi file manager click on "Add Source" and type in the following URL: https://boogiedude243261-beep.github.io/AniSync/
+ Once installed, go to "Add-Ons" and then "Install from Zip File". Navigate to AniSync and install. 
