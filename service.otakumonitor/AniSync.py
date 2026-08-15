@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error 
 import xbmc
 import urllib.parse
+import traceback
 
 def query_anilist(search_title): 
     url = "https://graphql.anilist.co"
@@ -73,8 +74,12 @@ class OtakuPlayerObserver(xbmc.Player):
         xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel Episode: {xbmc.getInfoLabel('VideoPlayer.Episode')}", xbmc.LOGWARNING)
         xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel TVShowTitle: {xbmc.getInfoLabel('VideoPlayer.TVShowTitle')}", xbmc.LOGWARNING)
         xbmc.log(f"[OtakuMonitor Diag [START]] Initial InfoLabel Title: {xbmc.getInfoLabel('VideoPlayer.Title')}", xbmc.LOGWARNING)
-        if 'plugin.video.otaku' in plugin_url or xbmc.getInfoLabel('Container.PluginName') == 'plugin.video.otaku':
+        if 'plugin.video.otaku' in plugin_url:
             self.is_playing_otaku = True
+            path_parts = urllib.parse.urlparse(plugin_url).path.strip('/').split('/')
+            if len(path_parts) >= 3 and path_parts[0] == 'play':
+                anilist_id = anilist_id or path_parts[1]
+                episode = episode or path_parts[2]
             if '?' in plugin_url:
                 parsed_url = urllib.parse.urlparse(plugin_url)
                 params = dict(urllib.parse.parse_qsl(parsed_url.query))
@@ -111,15 +116,18 @@ if __name__ == "__main__":
                         xbmc.log(f"[OtakuMonitor] Primary Target Acquired: Native AniList ID {current_id}. Querying AniZip...", xbmc.LOGINFO)
                         anizip_data = anizip_plugin(current_id)
                     elif current_title:
-                        xbmc.log(f"[OtakuMonitor] [BACKUP TRIGGERED] No AniList ID provided by Otaku. Falling back to fuzzy title search for: '{current_title}'", xbmc.LOGWARNING)
+                        xbmc.log(f"[OtakuMonitor] [BACKUP TRIGGERED] No AniList ID provided. Falling back to fuzzy title search for: '{current_title}'", xbmc.LOGWARNING)
                         anilist_result = query_anilist(current_title)
                         if anilist_result:
                             fallback_id = anilist_result.get("id")
+                            player.current_anilist_id = fallback_id
+                            current_id = fallback_id
                             xbmc.log(f"[OtakuMonitor] [BACKUP SUCCESS] AniList found ID {fallback_id} for '{current_title}'. Querying AniZip...", xbmc.LOGINFO)
                             anizip_data = anizip_plugin(fallback_id)
                         else:
                             xbmc.log(f"[OtakuMonitor] [BACKUP FAILED] Could not find an AniList ID for title '{current_title}'.", xbmc.LOGERROR)
                     if anizip_data:
+                        xbmc.log(f"[OtakuMonitor Diag] AniZip raw keys received: {list(anizip_data.keys()) if anizip_data else 'None'}", xbmc.LOGWARNING)
                         brick = anizip_data.get("episodes", {})
                         ep_data = None
                         try:
@@ -127,6 +135,7 @@ if __name__ == "__main__":
                         except ValueError:
                             target_ep = str(current_ep)
                         for key, info in brick.items():
+                            xbmc.log(f"[OtakuMonitor Diag] Checking AniZip key '{key}' -> Target Ep: {target_ep} | Map Ep Num: {info.get('episodeNumber')} | Season: {info.get('seasonNumber')}", xbmc.LOGDEBUG)
                             try:
                                 k_val = int(key)
                             except ValueError:
@@ -155,24 +164,27 @@ if __name__ == "__main__":
                                     listitem = xbmcgui.ListItem(path=current_path) 
                                     video_tag = listitem.getVideoInfoTag() 
                                     video_tag.setTitle(current_tag.getTitle())
-                                    video_tag.setTVShowTitle(current_tag.getTVShowTitle())
+                                    video_tag.setTvShowTitle(current_tag.getTVShowTitle())
                                     video_tag.setSeason(int(tmdb_season)) 
                                     video_tag.setEpisode(int(tmdb_episode)) 
                                     video_tag.setMediaType('episode') 
                                     xbmc.Player().updateInfoTag(listitem) 
                                     active_tag = xbmc.Player().getVideoInfoTag() 
+                                    xbmc.log(f"[OtakuMonitor Diag [VERIFY]] Playing File: {xbmc.Player().getPlayingFile()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [VERIFY]] Active Tag Title: {active_tag.getTitle()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [VERIFY]] Active Tag TVShowTitle: {active_tag.getTvShowTitle()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [VERIFY]] Active Tag Season: {active_tag.getSeason()}", xbmc.LOGWARNING)
+                                    xbmc.log(f"[OtakuMonitor Diag [VERIFY]] Active Tag Episode: {active_tag.getEpisode()}", xbmc.LOGWARNING)
                                     xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag Season: {active_tag.getSeason()}", xbmc.LOGWARNING) 
                                     xbmc.log(f"[OtakuMonitor Diag [POST]] InfoTag Episode: {active_tag.getEpisode()}", xbmc.LOGWARNING) 
                                     xbmc.log("[OtakuMonitor] Successfully updated player metadata.", xbmc.LOGINFO)  
                                 except Exception as e: 
+                                    xbmc.log(f"[OtakuMonitor] Failed to update player metadata:\n{traceback.format_exc()}", xbmc.LOGERROR)
                                     xbmc.log(f"[OtakuMonitor] Failed to update player metadata: {e}", xbmc.LOGERROR)
                             else:
                                 xbmc.log(f"[OtakuMonitor] AniZip data found for episode {current_ep}, but TVDB mapping is missing.", xbmc.LOGWARNING)
-                        last_seen_identifier = identifier
-                else:
-                    last_seen_identifier = None
+                    last_seen_identifier = identifier
         else:
             last_seen_identifier = None
         if monitor.waitForAbort(5):
             break
-
