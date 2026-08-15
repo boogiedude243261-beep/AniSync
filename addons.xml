@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addons>
-    <addon id="service.anisync" name="AniSync" version="1.0.0" provider-name="boogiedude243261-beep">
+    <addon id="service.otakumonitor" name="AniSync" version="1.0.0" provider-name="boogiedude243261-beep">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
         </requires>
