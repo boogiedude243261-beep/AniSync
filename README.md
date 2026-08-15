@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon.png" width="120" alt="AniSync Logo">
+<img src="https://raw.githubusercontent.com/boogiedude243261-beep/AniSync/main/icon.png" width="120" alt="AniSync Logo">
 
 #  AniSync
 ### *Lightweight background metadata sync daemon for Kodi*
