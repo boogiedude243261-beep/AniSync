@@ -145,18 +145,18 @@ if __name__ == "__main__":
                                 tmdb_GEM = f"S{tmdb_season:02d}E{tmdb_episode:02d}"
                                 xbmc.log(f"[OtakuMonitor] SUCCESS! Final Scraper Target: {tmdb_GEM}", xbmc.LOGINFO)
                                 try:
-                                    listitem = xbmcgui.ListItem()
-                                    listitem.setInfo('video', {
-                                        'season': int(tmdb_season),
-                                        'episode': int(tmdb_episode),
-                                        'mediatype': 'episode'
-                                    })
-                                    xbmc.Player().updateInfoTag(listitem)
-                                    xbmc.log("[OtakuMonitor] Successfully updated player metadata with TMDB layout.", xbmc.LOGINFO) 
+                                 listitem = xbmcgui.ListItem()
+                                 video_tag = listitem.getVideoInfoTag()
+                                 video_tag.setSeason(int(tmdb_season))
+                                 video_tag.setEpisode(int(tmdb_episode))
+                                 video_tag.setMediaType('episode')
+    
+                                 xbmc.Player().updateInfoTag(listitem)
+                                 xbmc.log("[OtakuMonitor] Successfully updated player metadata with TMDB layout via InfoTagVideo.", xbmc.LOGINFO) 
                                 except Exception as e:
-                                    xbmc.log(f"[OtakuMonitor] Failed to update player metadata: {e}", xbmc.LOGERROR)
+                                 xbmc.log(f"[OtakuMonitor] Failed to update player metadata: {e}", xbmc.LOGERROR)
                             else:
-                                xbmc.log(f"[OtakuMonitor] AniZip data found for episode {current_ep}, but TVDB mapping is missing.", xbmc.LOGWARNING)
+                             xbmc.log(f"[OtakuMonitor] AniZip data found for episode {current_ep}, but TVDB mapping is missing.", xbmc.LOGWARNING)
                                 
                     last_seen_identifier = identifier
         else:
