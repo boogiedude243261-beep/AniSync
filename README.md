@@ -3,7 +3,7 @@
 <img src="https://raw.githubusercontent.com/boogiedude243261-beep/AniSync/main/icon.png" width="120" height="120" style="border-radius: 35%;" alt="AniSync Logo">
 
 #  AniSync
-### *Lightweight background metadata sync daemon for Kodi*
+### *Lightweight Service Add-On/Background Daemon for Kodi*
 
 [![Kodi Version](https://img.shields.io/badge/Kodi-v20%2B%20(Nexus%2FOmega)-blue.svg?style=flat-square&logo=kodi)](https://kodi.tv)
 [![Platform](https://img.shields.io/badge/Platform-All-lightgrey.svg?style=flat-square)]()
