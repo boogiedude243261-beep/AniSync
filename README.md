@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ AniSync
+<img src="icon.png" width="120" alt="AniSync Logo">
+
+#  AniSync
 ### *Lightweight background metadata sync daemon for Kodi*
 
 [![Kodi Version](https://img.shields.io/badge/Kodi-v20%2B%20(Nexus%2FOmega)-blue.svg?style=flat-square&logo=kodi)](https://kodi.tv)
