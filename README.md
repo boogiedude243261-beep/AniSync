@@ -8,7 +8,7 @@
 [![Kodi Version](https://img.shields.io/badge/Kodi-v20%2B%20(Nexus%2FOmega)-blue.svg?style=flat-square&logo=kodi)](https://kodi.tv)
 [![Platform](https://img.shields.io/badge/Platform-All-lightgrey.svg?style=flat-square)]()
 
-</div>
+<div align="center">
 
 ---
 
