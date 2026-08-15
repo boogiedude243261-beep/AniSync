@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addons>
+    <addon id="service.anisync" name="AniSync" version="1.0.0" provider-name="boogiedude243261-beep">
+        <requires>
+            <import addon="xbmc.python" version="3.0.0"/>
+        </requires>
+        <extension point="xbmc.service" library="AniSync.py"/>
+        <extension point="xmc.addon.metadata">
+            <platform>all</platform>
+            <summary lang="en">Syncs anime video metadata to AniList/AniZip standards.</summary>
+        </extension>
+    </addon>
+</addons>
