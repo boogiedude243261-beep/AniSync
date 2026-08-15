@@ -40,7 +40,6 @@ def query_anilist(search_title):
     except urllib.error.URLError as e:
         xbmc.log(f"Connection Error: {e.reason}", xbmc.LOGERROR)
     return None 
-
 def anizip_plugin(id): 
     url = f"https://api.ani.zip/mappings?anilist_id={id}"
     headers = {
@@ -56,7 +55,6 @@ def anizip_plugin(id):
     except (urllib.error.HTTPError, urllib.error.URLError) as e:
         xbmc.log(f"[OtakuMonitor] AniZip Error: {e}", xbmc.LOGERROR)
     return None
-
 class OtakuPlayerObserver(xbmc.Player):
     def __init__(self):
         super(OtakuPlayerObserver, self).__init__()
@@ -64,77 +62,85 @@ class OtakuPlayerObserver(xbmc.Player):
         self.current_episode = None
         self.current_title = None  
         self.is_playing_otaku = False
-
     def onPlayBackStarted(self):
-        xbmc.sleep(1000) 
-        anilist_id = xbmc.getInfoLabel('ListItem.Property(anilist_id)')
+        xbmc.sleep(2000) 
+        anilist_id = xbmc.getInfoLabel('ListItem.Property(anilist_id)') or xbmc.getInfoLabel('ListItem.Property(item.info.anilist_id)')
         episode = xbmc.getInfoLabel('VideoPlayer.Episode')
         title = xbmc.getInfoLabel('VideoPlayer.TVShowTitle') or xbmc.getInfoLabel('VideoPlayer.Title')
         plugin_url = xbmc.getInfoLabel('Player.Filenameandpath') 
-        
         if 'plugin.video.otaku' in plugin_url or xbmc.getInfoLabel('Container.PluginName') == 'plugin.video.otaku':
             self.is_playing_otaku = True
             if '?' in plugin_url:
                 parsed_url = urllib.parse.urlparse(plugin_url)
                 params = dict(urllib.parse.parse_qsl(parsed_url.query))
-                if not anilist_id:
-                    anilist_id = params.get('anilist_id') or params.get('id')
-                if not episode:
-                    episode = params.get('episode')
-                if not title:
-                    title = params.get('title') or params.get('name') or params.get('media_title')
-                    
+                anilist_id = anilist_id or params.get('anilist_id') or params.get('id')
+                episode = params.get('episode') or episode
+                title = params.get('title') or params.get('name') or params.get('media_title') or title
             self.current_anilist_id = anilist_id
             self.current_episode = episode
             self.current_title = title
-
     def onPlayBackStopped(self):
         self._clear_data()
-
     def onPlayBackEnded(self):
         self._clear_data()
-
     def _clear_data(self):
         self.current_anilist_id = None
         self.current_episode = None
         self.current_title = None
         self.is_playing_otaku = False
-
 if __name__ == "__main__":
     monitor = xbmc.Monitor()
     player = OtakuPlayerObserver()
     last_seen_identifier = None
-
     while not monitor.abortRequested():
         if player.isPlayingVideo() and player.is_playing_otaku:
             current_id = player.current_anilist_id
             current_ep = player.current_episode
             current_title = player.current_title
-            
             if current_ep:
                 base_id = current_id if current_id else current_title
                 identifier = f"{base_id}_Ep{current_ep}"
-                
                 if identifier != last_seen_identifier:
                     anizip_data = None
                     if current_id:
-                        xbmc.log(f"[OtakuMonitor] Found AniList ID directly: {current_id}. Querying AniZip...", xbmc.LOGINFO)
+                        xbmc.log(f"[OtakuMonitor] Primary Target Acquired: Native AniList ID {current_id}. Querying AniZip...", xbmc.LOGINFO)
                         anizip_data = anizip_plugin(current_id)
                     elif current_title:
-                        xbmc.log(f"[OtakuMonitor] No AniList ID found. Falling back to search title: '{current_title}'", xbmc.LOGINFO)
+                        xbmc.log(f"[OtakuMonitor] [BACKUP TRIGGERED] No AniList ID provided by Otaku. Falling back to fuzzy title search for: '{current_title}'", xbmc.LOGWARNING)
                         anilist_result = query_anilist(current_title)
                         if anilist_result:
                             fallback_id = anilist_result.get("id")
-                            xbmc.log(f"[OtakuMonitor] AniList found ID {fallback_id} for '{current_title}'. Querying AniZip...", xbmc.LOGINFO)
+                            xbmc.log(f"[OtakuMonitor] [BACKUP SUCCESS] AniList found ID {fallback_id} for '{current_title}'. Querying AniZip...", xbmc.LOGINFO)
                             anizip_data = anizip_plugin(fallback_id)
-                            
+                        else:
+                            xbmc.log(f"[OtakuMonitor] [BACKUP FAILED] Could not find an AniList ID for title '{current_title}'.", xbmc.LOGERROR)
                     if anizip_data:
                         brick = anizip_data.get("episodes", {})
-                        ep_data = brick.get(str(current_ep), {})
+                        ep_data = None
+                        try:
+                            target_ep = int(current_ep)
+                        except ValueError:
+                            target_ep = str(current_ep)
+                        for key, info in brick.items():
+                            try:
+                                k_val = int(key)
+                            except ValueError:
+                                k_val = key
+                            if target_ep == k_val:
+                                ep_data = info
+                                break
+                        if not ep_data:
+                            for key, info in brick.items():
+                                try:
+                                    tvdb_ep = int(info.get("tvdbEpisode", -1))
+                                except ValueError:
+                                    tvdb_ep = -1
+                                if target_ep == tvdb_ep:
+                                    ep_data = info
+                                    break
                         if ep_data:
                             tmdb_season = ep_data.get("tvdbSeason")
                             tmdb_episode = ep_data.get("tvdbEpisode")
-                            
                             if tmdb_season is not None and tmdb_episode is not None:
                                 tmdb_GEM = f"S{tmdb_season:02d}E{tmdb_episode:02d}"
                                 xbmc.log(f"[OtakuMonitor] SUCCESS! Final Scraper Target: {tmdb_GEM}", xbmc.LOGINFO)
@@ -155,6 +161,5 @@ if __name__ == "__main__":
                     last_seen_identifier = identifier
         else:
             last_seen_identifier = None
-            
         if monitor.waitForAbort(5):
             break
