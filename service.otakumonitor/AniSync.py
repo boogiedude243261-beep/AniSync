@@ -132,15 +132,15 @@ if __name__ == "__main__":
                         if not ep_data:
                             for key, info in brick.items():
                                 try:
-                                    tvdb_ep = int(info.get("tvdbEpisode", -1))
+                                    tvdb_ep = int(info.get("episodeNumber", -1))
                                 except ValueError:
                                     tvdb_ep = -1
                                 if target_ep == tvdb_ep:
                                     ep_data = info
                                     break
                         if ep_data:
-                            tmdb_season = ep_data.get("tvdbSeason")
-                            tmdb_episode = ep_data.get("tvdbEpisode")
+                            tmdb_season = ep_data.get("seasonNumber")
+                            tmdb_episode = ep_data.get("episodeNumber")
                             if tmdb_season is not None and tmdb_episode is not None:
                                 tmdb_GEM = f"S{tmdb_season:02d}E{tmdb_episode:02d}"
                                 xbmc.log(f"[OtakuMonitor] SUCCESS! Final Scraper Target: {tmdb_GEM}", xbmc.LOGINFO)
