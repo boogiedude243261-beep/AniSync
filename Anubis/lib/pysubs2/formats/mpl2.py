@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import TYPE_CHECKING, TextIO, TypedDict, Unpack, override
+from typing import TYPE_CHECKING, TextIO, TypedDict, Unpack
 
 from ..ssaevent import SSAEvent
 from ..time import times_to_ms
@@ -27,7 +27,6 @@ class MPL2Format(FormatBase):
         pass
 
     @classmethod
-    @override
     def guess_format(cls, text: str) -> str | None:
         """See :meth:`pysubs2.formats.FormatBase.guess_format()`"""
         if MPL2_FORMAT.search(text):
@@ -36,7 +35,6 @@ class MPL2Format(FormatBase):
             return None
 
     @classmethod
-    @override
     def from_file(cls, subs: "SSAFile", fp: TextIO, format_: str, **kwargs: Unpack[ReaderArgs]) -> None:
         """See :meth:`pysubs2.formats.FormatBase.from_file()`"""
         def prepare_text(lines: str) -> str:
@@ -67,7 +65,6 @@ class MPL2Format(FormatBase):
                 )
 
     @classmethod
-    @override
     def to_file(cls, subs: "SSAFile", fp: TextIO, format_: str, **kwargs: Unpack[WriterArgs]) -> None:
         """
         See :meth:`pysubs2.formats.FormatBase.to_file()`

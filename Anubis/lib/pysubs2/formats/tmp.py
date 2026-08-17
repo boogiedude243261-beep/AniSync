@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import TYPE_CHECKING, NotRequired, TextIO, TypedDict, Unpack, override
+from typing import TYPE_CHECKING, NotRequired, TextIO, TypedDict, Unpack
 
 from ..ssaevent import SSAEvent
 from ..ssastyle import SSAStyle
@@ -48,7 +48,6 @@ class TmpFormat(FormatBase):
         return f"{h:02d}:{m:02d}:{s:02d}"
 
     @classmethod
-    @override
     def guess_format(cls, text: str) -> str | None:
         """See :meth:`pysubs2.formats.FormatBase.guess_format()`"""
         if "[Script Info]" in text or "[V4+ Styles]" in text:
@@ -62,7 +61,6 @@ class TmpFormat(FormatBase):
         return None
 
     @classmethod
-    @override
     def from_file(cls, subs: "SSAFile", fp: TextIO, format_: str, **kwargs: Unpack[ReaderArgs]) -> None:
         """See :meth:`pysubs2.formats.FormatBase.from_file()`"""
         events = []
@@ -102,7 +100,6 @@ class TmpFormat(FormatBase):
         subs.events = events
 
     @classmethod
-    @override
     def to_file(cls, subs: "SSAFile", fp: TextIO, format_: str, **kwargs: Unpack[WriterArgs]) -> None:
         """
         See :meth:`pysubs2.formats.FormatBase.to_file()`
