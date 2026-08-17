@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/boogiedude243261-beep/AniSync/main/icon.png" width="120" height="120" style="border-radius: 35%;" alt="AniSync Logo">
+<img src="https://raw.githubusercontent.com/boogiedude243261-beep/Anubis/main/icon.png" width="120" height="120" style="border-radius: 35%;" alt="AniSync Logo">
 
 #  Anubis
 ### *Lightweight Service Add-On/Background Daemon for Kodi*
