@@ -13,7 +13,7 @@
 ---
 
 ## Overview
-**Anubis** is an automated subtitle-fetching daemon for Kodi tailored specifically for anime. When you play a video, Anubis inspects Kodi's active player metadata, maps the show title and episode number using the **AniList** and **AniZip** APIs to resolve exact **TVDB/TMDB** keys, and uses **Subliminal** to automatically pull and apply matching English subtitles in real time.
+**Anubis** is an automated subtitle-fetching daemon for Kodi meant to be used in conjunction with Otaku. When you play a video, Anubis inspects Kodi's active player metadata, maps the show title and episode number using the **AniList** and **AniZip** APIs to resolve exact **TVDB/TMDB** keys, and uses **Subliminal** to automatically pull and apply matching English subtitles in real time. This add-on is only useful if Otaku's video streams don't come with subtitles or if you are getting wrong subtitles for the episode you are watching. 
 
 ---
 
