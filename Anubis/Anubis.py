@@ -1,4 +1,5 @@
 import json
+import threading
 import urllib
 import urllib.request 
 import xbmcvfs
@@ -53,6 +54,7 @@ def anizip(id): #HUMAN CODED
     except Exception as e:
         log_msg(f"AniZip API request failed for ID '{id}': {e}")
         return {}
+
 def subliminal1(title, season, episode, seriestvdbid, tvdbid): #HUMAN REVIEWED 
     if not title:
         log_msg("subliminal1 missing series title.")
@@ -114,7 +116,14 @@ def metadata(): #AI COMPLETELY
         "title": title.strip() if title else "",
         "episode": episode }
 ################ EXECUTION ###############
-def fetchsub(): 
+def fetchsub(): #HUMAN CODED
+    try:
+        existing_subs = xbmc.Player().getAvailableSubtitleStreams()
+        if existing_subs and len(existing_subs) > 0:
+            log_msg(f"Stream already has {len(existing_subs)} native subtitle track(s). Daemon backing off.", is_error=False)
+            return
+    except Exception as e:
+        log_msg(f"Could not check existing subtitle streams: {e}")
     data = metadata()
     inp_title = data.get("title")
     if not inp_title:
@@ -144,33 +153,23 @@ def fetchsub():
                 if xbmc.Player().isPlayingVideo():
                     xbmc.Player().setSubtitles(srt)
                     xbmcgui.Dialog().notification("Subtitles", "Downloaded and applied successfully", xbmcgui.NOTIFICATION_INFO, 3000)
-
 class OtakuPlayerMonitor(xbmc.Player): #COMPLETELY AI FROM HERE DOWN
     def __init__(self):
         super().__init__()
-
     def onPlayBackStarted(self):
-        # Sleep briefly to allow Kodi to resolve the stream URL and populate metadata
         xbmc.sleep(2000)
-        
         try:
             playing_file = self.getPlayingFile()
-            # Verify the stream originated from the Otaku addon
             if "plugin.video.otaku" in playing_file:
                 log_msg("Otaku playback detected. Fetching subtitles...", is_error=False)
-                fetchsub()
+                threading.Thread(target=fetchsub).start()
         except Exception as e:
             log_msg(f"Failed during playback check: {e}")
-
 if __name__ == '__main__': 
     monitor = xbmc.Monitor()
     player = OtakuPlayerMonitor()
-    
     log_msg("Anubis Daemon Started", is_error=False)
-    
-    # Keeps the daemon alive in the background quietly
     while not monitor.abortRequested():
-        # Sleeps and checks for an abort request every 10 seconds to save CPU
         if monitor.waitForAbort(10):
             break
             
