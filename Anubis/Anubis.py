@@ -4,8 +4,6 @@ import urllib.request
 import xbmcvfs
 import xbmcgui
 import sys
-import sys
-import os
 import os
 import xbmc
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -116,32 +114,65 @@ def metadata(): #AI COMPLETELY
         "title": title.strip() if title else "",
         "episode": episode }
 ################ EXECUTION ###############
-data = metadata()
-inp_title = data.get("title")
-if not inp_title:
-    log_msg("Could not retrieve video title from Kodi player.")
-else: 
-    anilist_data = anilist(inp_title)
-    id = anilist_data.get("data", {}).get("Media", {}).get("id")
-    if not id:
-        log_msg(f"AniList returned no media ID for '{inp_title}'.")
+def fetchsub(): 
+    data = metadata()
+    inp_title = data.get("title")
+    if not inp_title:
+        log_msg("Could not retrieve video title from Kodi player.")
     else: 
-        currentepisode = str(data.get("episode"))
-        anime_data = anizip(id)
-        episode = anime_data.get("episodes", {}).get(currentepisode, {}).get("episodeNumber")
-        season = anime_data.get("episodes", {}).get(currentepisode, {}).get("seasonNumber")
-        media_titles = anilist_data.get("data", {}).get("Media", {}).get("title", {})
-        title = (
-            media_titles.get("english")
-            or anime_data.get("titles", {}).get("en")
-            or media_titles.get("romaji")
-            or inp_title )
-        if episode == None:
-            episode = anime_data.get("episodes", {}).get(currentepisode, {}).get("episode")
-        tvdbseries = anime_data.get("episodes", {}).get(currentepisode, {}).get("tvdbShowId")
-        tvdbid = anime_data.get("episodes", {}).get(currentepisode, {}).get("tvdbId")
-        srt = subliminal1(title, season, episode, tvdbseries, tvdbid)
-        if srt:
-            if xbmc.Player().isPlayingVideo():
-                xbmc.Player().setSubtitles(srt)
-                xbmcgui.Dialog().notification("Subtitles", "Downloaded and applied successfully", xbmcgui.NOTIFICATION_INFO, 3000)
+        anilist_data = anilist(inp_title)
+        id = anilist_data.get("data", {}).get("Media", {}).get("id")
+        if not id:
+            log_msg(f"AniList returned no media ID for '{inp_title}'.")
+        else: 
+            currentepisode = str(data.get("episode"))
+            anime_data = anizip(id)
+            episode = anime_data.get("episodes", {}).get(currentepisode, {}).get("episodeNumber")
+            season = anime_data.get("episodes", {}).get(currentepisode, {}).get("seasonNumber")
+            media_titles = anilist_data.get("data", {}).get("Media", {}).get("title", {})
+            title = (
+                media_titles.get("english")
+                or anime_data.get("titles", {}).get("en")
+                or media_titles.get("romaji")
+                or inp_title )
+            if episode == None:
+                episode = anime_data.get("episodes", {}).get(currentepisode, {}).get("episode")
+            tvdbseries = anime_data.get("episodes", {}).get(currentepisode, {}).get("tvdbShowId")
+            tvdbid = anime_data.get("episodes", {}).get(currentepisode, {}).get("tvdbId")
+            srt = subliminal1(title, season, episode, tvdbseries, tvdbid)
+            if srt:
+                if xbmc.Player().isPlayingVideo():
+                    xbmc.Player().setSubtitles(srt)
+                    xbmcgui.Dialog().notification("Subtitles", "Downloaded and applied successfully", xbmcgui.NOTIFICATION_INFO, 3000)
+
+class OtakuPlayerMonitor(xbmc.Player): #COMPLETELY AI FROM HERE DOWN
+    def __init__(self):
+        super().__init__()
+
+    def onPlayBackStarted(self):
+        # Sleep briefly to allow Kodi to resolve the stream URL and populate metadata
+        xbmc.sleep(2000)
+        
+        try:
+            playing_file = self.getPlayingFile()
+            # Verify the stream originated from the Otaku addon
+            if "plugin.video.otaku" in playing_file:
+                log_msg("Otaku playback detected. Fetching subtitles...", is_error=False)
+                fetchsub()
+        except Exception as e:
+            log_msg(f"Failed during playback check: {e}")
+
+if __name__ == '__main__': 
+    monitor = xbmc.Monitor()
+    player = OtakuPlayerMonitor()
+    
+    log_msg("Anubis Daemon Started", is_error=False)
+    
+    # Keeps the daemon alive in the background quietly
+    while not monitor.abortRequested():
+        # Sleeps and checks for an abort request every 10 seconds to save CPU
+        if monitor.waitForAbort(10):
+            break
+            
+    del player
+    log_msg("Anubis Daemon Stopped", is_error=False)
